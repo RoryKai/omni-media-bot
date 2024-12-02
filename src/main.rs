@@ -1,11 +1,9 @@
-
-
-
 use std::env;
 use serenity::prelude::*;
 pub mod event;
 pub mod commands;
 use event::Handler;
+pub mod api_handler;
 
 #[tokio::main]
 async fn main() {
@@ -13,6 +11,10 @@ async fn main() {
     // Powershell Env Setup => $env:DISCORD_TOKEN = "{token}"
     let token = env::var("DISCORD_TOKEN")
         .expect("Expected a token in the environment");
+    let shard_count = env::var("SHARD_COUNT")
+        .expect("Expected shard count in the environment")
+        .parse()
+        .unwrap();
 
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::GUILD_MESSAGES
@@ -28,7 +30,7 @@ async fn main() {
         .expect("Err creating client");
 
     // Start shard & listen for events | Automatic reconnect w/ exponential backoff
-    if let Err(why) = client.start().await {
+    if let Err(why) = client.start_shards(shard_count).await {
         println!("Client error: {why:?}");
     }
 }
